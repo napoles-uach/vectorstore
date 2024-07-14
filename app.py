@@ -2,6 +2,7 @@ import streamlit as st
 from openai import OpenAI
 import os
 import json
+import time
 
 # Initialize the OpenAI client
 client = OpenAI(api_key=st.secrets["gpt_key"])
@@ -127,10 +128,10 @@ if ask:
                 for mensaje in sync_cursor_page.data:
                     for bloque in mensaje.content:
                         if bloque.type == 'text':
-                            return bloque.text.value
+                            yield bloque.text.value + " "
+                            time.sleep(0.1)
 
             # Example usage (replace 'sync_cursor_page' with your actual object)
-            valor = extraer_valor(messages)
-            st.write(valor)
+            st.write_stream(extraer_valor(messages))
         else:
             st.warning(f"Run status: {run.status}")
