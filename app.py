@@ -1,92 +1,119 @@
 import streamlit as st
 from openai import OpenAI
-from rich import print
+import os
+import json
 
-#openai.api_key = st.secrets["gpt_key"]
 # Initialize the OpenAI client
 client = OpenAI(api_key=st.secrets["gpt_key"])
 
-# Create a vector store called "Paper"
-vector_store = client.beta.vector_stores.create(name="Paper")
+# Path to the local PDF file
+local_file_path = "paper.pdf"
+vector_store_id_path = "vector_store_id.json"
 
-# Ready the files for upload to OpenAI
-file_paths = ["paper.pdf"]
-file_streams = [open(path, "rb") for path in file_paths]
+def save_vector_store_id(vector_store_id):
+    with open(vector_store_id_path, 'w') as f:
+        json.dump({"vector_store_id": vector_store_id}, f)
 
-try:
-    # Use the upload and poll SDK helper to upload the files, add them to the vector store,
-    # and poll the status of the file batch for completion.
-    file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
-      vector_store_id=vector_store.id, files=file_streams
-    )
+def load_vector_store_id():
+    if os.path.exists(vector_store_id_path):
+        with open(vector_store_id_path, 'r') as f:
+            data = json.load(f)
+            return data.get("vector_store_id")
+    return None
 
-    # Print the status and the file counts of the batch to see the result of this operation.
-    print(file_batch.status)
-    print(file_batch.file_counts)
+vector_store_id = load_vector_store_id()
 
-    # Create an assistant
-    paper_assistant = client.beta.assistants.create(
-      name="Paper Assistant",
-      instructions="You are an author of a research paper. Use your knowledge base to answer questions about the research related to molecular packing.",
-      model="gpt-4o",
-      tools=[{"type": "file_search"}],
-    )
+if vector_store_id is None:
+    # Create a vector store called "Paper" if it does not exist
+    with st.spinner('Creating vector store...'):
+        vector_store = client.beta.vector_stores.create(name="Paper")
+        vector_store_id = vector_store.id
+        save_vector_store_id(vector_store_id)
+else:
+    # Use the existing vector store
+    with st.spinner('Using existing vector store...'):
+        vector_store = client.beta.vector_stores.retrieve(vector_store_id)
 
-    # Update the assistant to use the vector store
-    paper_assistant = client.beta.assistants.update(
-      assistant_id=paper_assistant.id,
-      tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
-    )
+if os.path.exists(local_file_path):
+    # Ready the file for upload to OpenAI
+    file_streams = [open(local_file_path, "rb")]
 
-    # Upload the user provided file to OpenAI
-    message_file = client.files.create(
-      file=open("paper.pdf", "rb"), purpose="assistants"
-    )
-    ask=st.text_input("ask")
-    ask=ask+" "
+    try:
+        # Use the upload and poll SDK helper to upload the files, add them to the vector store,
+        # and poll the status of the file batch for completion.
+        with st.spinner('Uploading files and polling status...'):
+            file_batch = client.beta.vector_stores.file_batches.upload_and_poll(
+              vector_store_id=vector_store.id, files=file_streams
+            )
 
-    # Create a thread and attach the file to the message
-    thread = client.beta.threads.create(
-      messages=[
-        {
-          "role": "user",
-          "content": ask,
-          "attachments": [
-            {"file_id": message_file.id, "tools": [{"type": "file_search"}]}
-          ],
-        }
-      ]
-    )
+        st.success('Files uploaded and processed successfully!')
+        st.write(f"Status: {file_batch.status}")
+        st.write(f"File counts: {file_batch.file_counts}")
 
-    # The thread now has a vector store with that file in its tool resources.
-    print(thread.tool_resources.file_search)
+        # Create an assistant
+        with st.spinner('Creating assistant...'):
+            paper_assistant = client.beta.assistants.create(
+              name="Paper Assistant",
+              instructions="You are an author of a research paper. Use your knowledge base to answer questions about the research related to molecular packing.",
+              model="gpt-4o",
+              tools=[{"type": "file_search"}],
+            )
 
-    # Run the assistant and poll for completion
-    run = client.beta.threads.runs.create_and_poll(
-      thread_id=thread.id,
-      assistant_id=paper_assistant.id,
-      instructions="Please address the user as Jane Doe. The user has a premium account."
-    )
+            # Update the assistant to use the vector store
+            paper_assistant = client.beta.assistants.update(
+              assistant_id=paper_assistant.id,
+              tool_resources={"file_search": {"vector_store_ids": [vector_store.id]}},
+            )
 
-    if run.status == 'completed': 
-      # List the messages in the thread
-      messages = client.beta.threads.messages.list(thread_id=thread.id)
-      print(messages)
-    else:
-      print(f"Run status: {run.status}")
+        # Upload the user provided file to OpenAI
+        with st.spinner('Uploading file to assistant...'):
+            message_file = client.files.create(
+              file=open(local_file_path, "rb"), purpose="assistants"
+            )
 
-    # Function to extract text value from the messages
-    def extraer_valor(sync_cursor_page):
-      for mensaje in sync_cursor_page.data:
-        for bloque in mensaje.content:
-          if bloque.type == 'text':
-            return bloque.text.value
+        ask = st.text_input("Ask")
+        if ask:
+            with st.spinner('Processing your request...'):
+                # Create a thread and attach the file to the message
+                thread = client.beta.threads.create(
+                  messages=[
+                    {
+                      "role": "user",
+                      "content": ask,
+                      "attachments": [
+                        {"file_id": message_file.id, "tools": [{"type": "file_search"}]}
+                      ],
+                    }
+                  ]
+                )
 
-    # Example usage (replace 'sync_cursor_page' with your actual object)
-    valor = extraer_valor(messages)
-    st.write(valor)
-  
-finally:
-    # Ensure all file streams are closed
-    for file_stream in file_streams:
-        file_stream.close()
+                # The thread now has a vector store with that file in its tool resources.
+                # Run the assistant and poll for completion
+                run = client.beta.threads.runs.create_and_poll(
+                  thread_id=thread.id,
+                  assistant_id=paper_assistant.id,
+                  instructions="Please address the user as Jane Doe. The user has a premium account."
+                )
+
+                if run.status == 'completed':
+                    # List the messages in the thread
+                    messages = client.beta.threads.messages.list(thread_id=thread.id)
+                    # Function to extract text value from the messages
+                    def extraer_valor(sync_cursor_page):
+                        for mensaje in sync_cursor_page.data:
+                            for bloque in mensaje.content:
+                                if bloque.type == 'text':
+                                    return bloque.text.value
+
+                    # Example usage (replace 'sync_cursor_page' with your actual object)
+                    valor = extraer_valor(messages)
+                    st.write(valor)
+                else:
+                    st.warning(f"Run status: {run.status}")
+
+    finally:
+        # Ensure all file streams are closed
+        for file_stream in file_streams:
+            file_stream.close()
+else:
+    st.error("The file 'paper.pdf' does not exist. Please make sure the file is in the correct location.")
