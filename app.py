@@ -117,7 +117,7 @@ if ask:
         run = client.beta.threads.runs.create_and_poll(
           thread_id=thread.id,
           assistant_id=paper_assistant.id,
-          instructions="Please address the user as Jane Doe. The user has a premium account."
+          instructions="Please address the user as Dear reader. The user has a premium account."
         )
 
         if run.status == 'completed':
@@ -132,6 +132,6 @@ if ask:
                             time.sleep(0.1)
 
             # Example usage (replace 'sync_cursor_page' with your actual object)
-            st.write_stream(extraer_valor(messages))
+            st.markdown(extraer_valor(messages))
         else:
             st.warning(f"Run status: {run.status}")
