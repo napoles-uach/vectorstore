@@ -133,5 +133,6 @@ if ask:
 
             # Example usage (replace 'sync_cursor_page' with your actual object)
             st.write_stream(extraer_valor(messages))
+            print(extraer_valor(messages))
         else:
             st.warning(f"Run status: {run.status}")
