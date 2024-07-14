@@ -132,6 +132,6 @@ if ask:
                             time.sleep(0.1)
 
             # Example usage (replace 'sync_cursor_page' with your actual object)
-            st.markdown(extraer_valor(messages))
+            st.write_stream(extraer_valor(messages))
         else:
             st.warning(f"Run status: {run.status}")
