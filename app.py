@@ -82,7 +82,7 @@ try:
 
     # Example usage (replace 'sync_cursor_page' with your actual object)
     valor = extraer_valor(messages)
-    print(valor)
+    st.write(valor)
   
 finally:
     # Ensure all file streams are closed
