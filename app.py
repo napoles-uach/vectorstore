@@ -42,13 +42,15 @@ try:
     message_file = client.files.create(
       file=open("paper.pdf", "rb"), purpose="assistants"
     )
+    ask=st.text_input("ask")
+    ask=ask+" "
 
     # Create a thread and attach the file to the message
     thread = client.beta.threads.create(
       messages=[
         {
           "role": "user",
-          "content": "why is this paper important?",
+          "content": ask,
           "attachments": [
             {"file_id": message_file.id, "tools": [{"type": "file_search"}]}
           ],
