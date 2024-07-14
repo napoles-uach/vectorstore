@@ -86,7 +86,7 @@ else:
 with st.spinner('Creating assistant...'):
     paper_assistant = client.beta.assistants.create(
       name="Paper Assistant",
-      instructions="You are an author of a research paper. Use your knowledge base to answer questions about the research related to molecular packing. Use markdown and latex to show mathematical formulas",
+      instructions="You are an author of a research paper. Use your knowledge base to answer questions about the research related to molecular packing. Use markdown or latex to show mathematical formulas. (remember, for main equations or expressions use double $ symbol to render correctly)",
       model="gpt-4o",
       tools=[{"type": "file_search"}],
     )
