@@ -2,7 +2,7 @@ import streamlit as st
 from openai import OpenAI
 import os
 import json
-import rich
+from rich import print
 
 # Initialize the OpenAI client
 client = OpenAI(api_key=st.secrets["gpt_key"])
