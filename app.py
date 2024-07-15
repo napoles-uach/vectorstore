@@ -2,7 +2,6 @@ import streamlit as st
 from openai import OpenAI
 import os
 import json
-import time
 
 def process_paper(api_key, local_file_path="paper.pdf", vector_store_id_path="vector_store_id.json", file_id_path="file_id.json"):
     # Initialize the OpenAI client
@@ -83,7 +82,7 @@ def process_paper(api_key, local_file_path="paper.pdf", vector_store_id_path="ve
         paper_assistant = client.beta.assistants.create(
           name="Paper Assistant",
           instructions="You are an author of a research paper. Write latex formulas only using double $$ symbols. Example $$d_{\text{max}} = x_2(y) - x_1(y)$$. using \[ and \] or \( and \) to write formulas is forbidden, only the $$ double symbol is allowed. Use your knowledge base to answer questions about the research discussed in the paper.",
-          model="gpt-3.5-turbo",
+          model="gpt-4",
           tools=[{"type": "file_search"}],
         )
 
@@ -124,11 +123,11 @@ def process_paper(api_key, local_file_path="paper.pdf", vector_store_id_path="ve
                     for mensaje in sync_cursor_page.data:
                         for bloque in mensaje.content:
                             if bloque.type == 'text':
-                                yield bloque.text.value + " "
-                                time.sleep(0.1)
+                                return bloque.text.value
 
                 # Example usage (replace 'sync_cursor_page' with your actual object)
-                st.write_stream(extraer_valor(messages))
+                valor = extraer_valor(messages)
+                st.write(valor)
             else:
                 st.warning(f"Run status: {run.status}")
 
