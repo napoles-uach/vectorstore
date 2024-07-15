@@ -2,7 +2,6 @@ import streamlit as st
 from openai import OpenAI
 import os
 import json
-import time
 
 # Initialize the OpenAI client
 client = OpenAI(api_key=st.secrets["gpt_key"])
@@ -86,7 +85,7 @@ else:
 with st.spinner('Creating assistant...'):
     paper_assistant = client.beta.assistants.create(
       name="Paper Assistant",
-      instructions="You are an author of a research paper. Use your knowledge base to answer questions about the research related to molecular packing. Use latex to show mathematical formulas. (remember, for  equations or math expressions use double $$ symbol to render correctly, example $$x^2$$)",
+      instructions="You are an author of a research paper. Use your knowledge base to answer questions about the research related to molecular packing.",
       model="gpt-4o",
       tools=[{"type": "file_search"}],
     )
@@ -117,7 +116,7 @@ if ask:
         run = client.beta.threads.runs.create_and_poll(
           thread_id=thread.id,
           assistant_id=paper_assistant.id,
-          instructions="Please address the user as Dear reader. The user has a premium account."
+          instructions="Please address the user as Jane Doe. The user has a premium account."
         )
 
         if run.status == 'completed':
@@ -128,11 +127,10 @@ if ask:
                 for mensaje in sync_cursor_page.data:
                     for bloque in mensaje.content:
                         if bloque.type == 'text':
-                            yield bloque.text.value + " "
-                            time.sleep(0.1)
+                            return bloque.text.value
 
             # Example usage (replace 'sync_cursor_page' with your actual object)
-            st.write_stream(extraer_valor(messages))
-            print(extraer_valor(messages))
+            valor = extraer_valor(messages)
+            st.write(valor)
         else:
             st.warning(f"Run status: {run.status}")
