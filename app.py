@@ -132,5 +132,6 @@ if ask:
             # Example usage (replace 'sync_cursor_page' with your actual object)
             valor = extraer_valor(messages)
             st.markdown(valor)
+            print(valor)
         else:
             st.warning(f"Run status: {run.status}")
