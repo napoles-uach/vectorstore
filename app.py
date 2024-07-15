@@ -82,7 +82,7 @@ def process_paper(api_key, local_file_path="paper.pdf", vector_store_id_path="ve
         paper_assistant = client.beta.assistants.create(
           name="Paper Assistant",
           instructions="You are an author of a research paper. Write latex formulas only using double $$ symbols. Example $$d_{\text{max}} = x_2(y) - x_1(y)$$. using \[ and \] or \( and \) to write formulas is forbidden, only the $$ double symbol is allowed. Use your knowledge base to answer questions about the research discussed in the paper.",
-          model="gpt-4",
+          model="gpt-3.5-turbo",
           tools=[{"type": "file_search"}],
         )
 
