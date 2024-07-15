@@ -86,7 +86,7 @@ else:
 with st.spinner('Creating assistant...'):
     paper_assistant = client.beta.assistants.create(
       name="Paper Assistant",
-      instructions="You are an author of a research paper. Use your knowledge base to answer questions about the research related to molecular packing. Write latex formulas only using double $$ symbols. Example $$x^2$$.",
+      instructions="You are an author of a research paper. Use your knowledge base to answer questions about the research related to molecular packing. Write latex formulas only using double $$ symbols. Example $$d_{\text{max}} = x_2(y) - x_1(y)$$.",
       model="gpt-4o",
       tools=[{"type": "file_search"}],
     )
