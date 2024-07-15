@@ -112,7 +112,7 @@ def process_paper(api_key, local_file_path="paper.pdf", vector_store_id_path="ve
             run = client.beta.threads.runs.create_and_poll(
               thread_id=thread.id,
               assistant_id=paper_assistant.id,
-              instructions="Please address the user as Jane Doe. The user has a premium account."
+              instructions="Please address the user as reader."
             )
 
             if run.status == 'completed':
